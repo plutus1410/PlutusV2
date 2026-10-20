@@ -8,6 +8,7 @@
    ============================================================ */
 window.APP_CONFIG = {
   WORKER_URL: "https://plutus-proxy.plutus1410.workers.dev",
+  LOGODEV_KEY: "pk_bhlc52p0TIy8HasyFvNnVA",
   PUBLIC_PROXIES: [
     "https://api.allorigins.win/raw?url=",
     "https://corsproxy.io/?url="
