@@ -94,12 +94,21 @@
     return out;
   }
 
-  /* ====================== COMPANY LOGOS ====================== */
-  const LOGO_SRC = (CFG.LOGO_SOURCES && CFG.LOGO_SOURCES.length) ? CFG.LOGO_SOURCES : [
-    'https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://{domain}&size=128',
-    'https://icons.duckduckgo.com/ip3/{domain}.ico'
-  ];
-  const logoUrl = (n, d) => LOGO_SRC[n].replace('{domain}', encodeURIComponent(d));
+    /* ====================== COMPANY LOGOS ====================== */
+  const LOGO_TEMPLATES = (() => {
+    const t = [], k = CFG.LOGODEV_KEY;
+    if (k) {
+      t.push('https://img.logo.dev/ticker/{symbol}?token=' + encodeURIComponent(k) + '&size=128&format=png&fallback=404');
+      t.push('https://img.logo.dev/{domain}?token=' + encodeURIComponent(k) + '&size=128&format=png&fallback=404');
+    }
+    return t.concat((CFG.LOGO_SOURCES && CFG.LOGO_SOURCES.length) ? CFG.LOGO_SOURCES : [
+      'https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://{domain}&size=128',
+      'https://icons.duckduckgo.com/ip3/{domain}.ico'
+    ]);
+  })();
+  const logoCandidates = (d, s) => LOGO_TEMPLATES
+    .filter((t) => (d || !t.includes('{domain}')) && (s || !t.includes('{symbol}')))
+    .map((t) => t.replace('{domain}', encodeURIComponent(d || '')).replace('{symbol}', encodeURIComponent(s || '')));
   const domainOf = (url) => {
     if (!url) return '';
     try { return new URL(/^https?:/i.test(url) ? url : 'https://' + url).hostname.replace(/^www\./i, ''); } catch (e) { return ''; }
@@ -109,26 +118,32 @@
     if (!w.length) return '?';
     return (w.length === 1 ? w[0].slice(0, 2) : w[0][0] + w[1][0]).toUpperCase();
   };
-  // size: '' | 'sm' | 'md' | 'lg'
-  function logoHTML(domain, name, size) {
-    const has = !!domain;
-    return `<span class="logo ${size || ''} ${has ? '' : 'nologo'}" data-d="${esc(domain || '')}" data-n="0">${has ? `<img src="${esc(logoUrl(0, domain))}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}<b>${esc(initials(name))}</b></span>`;
+  function logoHTML(domain, name, size, sym) {
+    const c = logoCandidates(domain, sym);
+    return `<span class="logo ${size || ''} ${c.length ? '' : 'nologo'}" data-d="${esc(domain || '')}" data-s="${esc(sym || '')}" data-n="0">${c.length ? `<img src="${esc(c[0])}" alt="" loading="lazy" decoding="async">` : ''}<b>${esc(initials(name))}</b></span>`;
   }
   function applyLogo(wrap, domain) {
     if (!wrap || !domain) return;
-    wrap.dataset.d = domain; wrap.dataset.n = '0'; wrap.classList.remove('nologo');
+    wrap.dataset.d = domain;
+    if (!wrap.classList.contains('nologo') && wrap.querySelector('img')) return;
+    const c = logoCandidates(domain, wrap.dataset.s); if (!c.length) return;
+    wrap.dataset.n = '0'; wrap.classList.remove('nologo');
     let img = wrap.querySelector('img');
-    if (!img) { img = document.createElement('img'); img.alt = ''; img.referrerPolicy = 'no-referrer'; img.decoding = 'async'; wrap.insertBefore(img, wrap.firstChild); }
-    img.src = logoUrl(0, domain);
+    if (!img) { img = document.createElement('img'); img.alt = ''; img.decoding = 'async'; wrap.insertBefore(img, wrap.firstChild); }
+    img.src = c[0];
   }
-  // <img> error events don't bubble, so listen in the capture phase: try the next source, else show initials
   function logoFail(img) {
     const w = img.closest && img.closest('.logo'); if (!w) return;
     const n = (+w.dataset.n || 0) + 1; w.dataset.n = String(n);
-    if (LOGO_SRC[n] && w.dataset.d) img.src = logoUrl(n, w.dataset.d); else w.classList.add('nologo');
+    const c = logoCandidates(w.dataset.d, w.dataset.s);
+    if (c[n]) img.src = c[n]; else w.classList.add('nologo');
   }
   document.addEventListener('error', (e) => { if (e.target instanceof HTMLImageElement) logoFail(e.target); }, true);
   document.addEventListener('load', (e) => { const t = e.target; if (t instanceof HTMLImageElement && t.closest('.logo') && t.naturalWidth && t.naturalWidth < 8) logoFail(t); }, true);
+  if (CFG.LOGODEV_KEY) document.addEventListener('DOMContentLoaded', () => {
+    const f = document.querySelector('.foot');
+    if (f) f.insertAdjacentHTML('beforeend', '<p style="margin-top:8px"><a href="https://logo.dev" target="_blank" rel="noopener" style="color:inherit">Logos provided by Logo.dev</a></p>');
+  });
 
   // Company website domains: a few well-known seeds, then looked up from Yahoo and remembered
   const SEED_DOMAINS = { 'RELIANCE.NS': 'ril.com', 'TCS.NS': 'tcs.com', 'HDFCBANK.NS': 'hdfcbank.com', 'INFY.NS': 'infosys.com', 'TATAMOTORS.NS': 'tatamotors.com', 'ITC.NS': 'itcportal.com' };
@@ -225,7 +240,7 @@
       list.innerHTML = (header ? `<li class="s-head">${header}</li>` : '') + items.map((it, i) => {
         const dom = knownDomain(it);
         return `<li role="option" data-i="${i}" class="${i === active ? 'active' : ''}">
-           ${logoHTML(dom, it.name, 'md')}
+           ${logoHTML(dom, it.name, 'md', it.symbol)}
            <span class="s-main">
              <span class="s-name">${highlight(it.name, q)}</span>
              <span class="s-sub">${isIndian(it.symbol) ? '<b class="in-tag">IN</b>' : ''}<span class="s-sym">${esc(it.symbol)}</span>${it.exch ? ' · ' + esc(it.exch) : ''}</span>
@@ -454,7 +469,7 @@
     const html = `
     <section class="identity reveal">
       <div class="ident-row">
-        ${logoHTML(dom, m.name, 'lg')}
+        ${logoHTML(dom, m.name, 'lg', m.symbol)}
         <div class="ident-txt">
           <div class="meta"><b>${esc(m.symbol)}</b> · ${esc(m.exchange)}</div>
           <h1>${esc(m.name)}</h1>
@@ -816,7 +831,7 @@
     const cols = A.PEER_METRICS.filter((mt) => !(m.isFinancial && mt.key === 'de'));
     const row = (r) => {
       const dom = domainOf(r.website);
-      const cell = `<span class="pcell">${r.isMain ? '<span class="you">◉</span>' : ''}${logoHTML(dom, r.name, 'sm')}<span class="ptxt"><b>${esc(shortSym(r.symbol))}</b><span class="pname">${esc(r.name)}</span></span></span>`;
+      const cell = `<span class="pcell">${r.isMain ? '<span class="you">◉</span>' : ''}${logoHTML(dom, r.name, 'sm', r.symbol)}<span class="ptxt"><b>${esc(shortSym(r.symbol))}</b><span class="pname">${esc(r.name)}</span></span></span>`;
       return `<tr class="${r.isMain ? 'main' : ''}"><td>${r.isMain ? cell : `<a href="#/s/${encodeURIComponent(r.symbol)}">${cell}</a>`}</td>${cols.map((c) => `<td>${fmtMetric(c, r[c.key], cur)}</td>`).join('')}</tr>`;
     };
     const avgTr = `<tr class="avg"><td><span class="pcell"><span class="ptxt"><b>Industry average</b><span class="pname">${nPeers} industry peers</span></span></span></td>${cols.map((c) => `<td>${fmtMetric(c, cmp.avgRow[c.key], cur)}</td>`).join('')}</tr>`;
