@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PLUTUS — Your AI Stock Analysis Companion</title>
+  <meta name="description" content="Search any listed company and see its financial health in plain English." />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='none' stroke='%233ea6ff' stroke-width='2'/><circle cx='16' cy='16' r='4' fill='%23fff'/></svg>" />
+  <link rel="stylesheet" href="css/style.css?v=9" />
+  <link rel="stylesheet" href="css/news.css?v=9" />
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <!-- ======================= TOP BAR (fixed) ======================= -->
+  <header class="topbar" id="topbar">
+    <a class="brand" href="#/" aria-label="Home"><span class="brand-orb"></span><span class="brand-text">PLUTUS</span></a>
+    <div class="mini-search hidden" id="miniSearchWrap">
+      <svg class="mini-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="miniSearch" type="text" placeholder="Search another company…" autocomplete="off" spellcheck="false" aria-label="Search another company" />
+      <ul class="suggest" id="miniSuggest" role="listbox"></ul>
+    </div>
+  </header>
+
+  <!-- ======================= VIEW 1: SEARCH ======================= -->
+  <main id="viewSearch" class="view view-search">
+    <div class="horizon" aria-hidden="true"></div>
+    <section class="hero">
+      <p class="eyebrow">Your AI stock analysis companion</p>
+      <h1>Know the company<br />before you own it.</h1>
+      <div class="search-wrap">
+        <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="mainSearch" type="text" placeholder="Type a company name — e.g. Reliance, Infosys"
+               autocomplete="off" spellcheck="false" aria-label="Search company" />
+        <ul class="suggest" id="mainSuggest" role="listbox"></ul>
+      </div>
+      <div class="chips" id="quickChips">
+        <span class="chips-label">Try</span>
+        <button data-s="RELIANCE.NS">Reliance</button>
+        <button data-s="TCS.NS">TCS</button>
+        <button data-s="HDFCBANK.NS">HDFC Bank</button>
+        <button data-s="INFY.NS">Infosys</button>
+        <button data-s="TATAMOTORS.NS">Tata Motors</button>
+        <button data-s="ITC.NS">ITC</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================= VIEW 2: DASHBOARD (+ "Latest In News" sidebar, added by js/news.js) ======================= -->
+  <main id="viewDash" class="view view-dash hidden">
+    <div id="dashLoading" class="loading hidden">
+      <div class="orbit"><span></span></div>
+      <p class="loading-text">ACQUIRING TELEMETRY <span id="loadingSym"></span></p>
+    </div>
+    <div id="dashError" class="error hidden"></div>
+    <div id="dashContent" class="hidden"></div>
+  </main>
+
+  <footer class="foot">
+    <p>PLUTUS presents publicly available data from Yahoo Finance for educational purposes. It is <strong>not investment advice</strong> and does not recommend buying, selling or holding any security. Data may be delayed or incomplete — verify with official company filings.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script src="js/config.js?v=9"></script>
+  <script src="js/analysis.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
+  <script src="js/news.js?v=9"></script>
+</body>
+</html>
