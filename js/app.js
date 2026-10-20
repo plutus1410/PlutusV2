@@ -489,7 +489,6 @@
       <div><div class="k">52-Week Range</div>
         ${posPct != null ? `<div class="range"><span style="left:${posPct}%"></span></div>
         <div class="range-lbl"><span>${fmtPrice(m.low52, pc)}</span><span>${fmtPrice(m.high52, pc)}</span></div>` : '<div class="v">—</div>'}
-        ${indBox('pos')}
       </div>
     </div>
 
